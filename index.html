@@ -3,17 +3,25 @@
 	<head>
 		<link rel="stylesheet" href="css/style.css">
 		<script src="js/main.js"></script>
+		<script src="js/knockout-3.4.0.js"></script>
 	</head>
 	<body>
 		<div class="container">
 			<div class="options-box">
-				<h1>Type a place to find pizza!</h1>
+				<h1>Places of Interest</h1>
 				<input id="address" type="textbox" placeholder="Enter Address">
-				<input id="submit" type="button" value="Go">
+				<input id="submit" type="button" value="Gooo">
+				<hr>
+				<input id="places-search" type="text" placeholder="Place">
+				<input id="go-places" type="button" value="Go">
 			</div>
 			<div id="map">
 			</div>
 		</div>
-		<script async defer src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCCMy9pVOKE5VRZu5bqwCNS-6s76tf9rmM&v=3&callback=initMap"></script>
+		
+		<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry&key=AIzaSyCCMy9pVOKE5VRZu5bqwCNS-6s76tf9rmM&v=3&callback=initMap">
+    </script>
+
+
 	</body>
 </html>
