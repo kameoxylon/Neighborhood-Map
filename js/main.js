@@ -2,6 +2,56 @@ var map;
 
 var markers = [];
 
+var userSearch = ("");
+
+var places = [{
+	name:'The Mall At Millenia', 
+	location:{
+		lat:28.48559, lng:-81.43168 
+	}, 
+	address:'4200 Conroy Rd, Orlando, FL 32839',
+	phone:'407-363-3555',
+	site:'http://www.mallatmillenia.com/',
+	fsId:'4b05869cf964a520dc6722e3'
+}, {
+	name:'The Florida Mall', 
+	location:{
+		lat:28.44599, lng:-81.39775
+	}, 
+	address:'8001 Orange Blossom Trail, Orlando, FL 32809',
+	phone:'407-851-6255',
+	site:'http://www.simon.com/mall/the-florida-mall',
+	fsId:'4b05869bf964a520b66722e3'
+}, {
+	name:'Artegon Marketplace', 
+	location:{
+		lat:28.46870, lng:-81.44728
+	},
+	address:'5250 International Dr, Orlando, FL 32819',
+	phone:'407-351-7718',
+	site:'http://www.artegonmarketplace.com/',
+	fsId:'5344416d498e7d8a923ab667'
+}, {
+	name:'Pointe Orlando', 
+	location:{
+		lat:28.43253, lng:-81.47079
+	},
+	address:'9101 International Dr, Orlando, FL 32819',
+	phone:'407-248-2838',
+	site:'http://www.pointeorlando.com/',
+	fsId:'4e752a59a809582dd5d35532'
+}, {
+	name:'Orlando International Premium Outlets', 
+	location:{
+		lat:28.47477, lng:-81.45191
+	}, 
+	address:'4951 International Dr, Orlando, FL 32819',
+	phone:'407-352-9600',
+	site:'http://www.premiumoutlets.com/outlet/orlando-international',
+	fsId:'4b05869df964a520e06722e3'
+}];
+
+
 var initMap = function() {
 	map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 13,
@@ -9,52 +59,6 @@ var initMap = function() {
 		mapTypeControl: false
 	});
 
-	var places = [{
-		name:'The Mall At Millenia', 
-		location:{
-			lat:28.48559, lng:-81.43168 
-		}, 
-		address:'4200 Conroy Rd, Orlando, FL 32839',
-		phone:'407-363-3555',
-		site:'http://www.mallatmillenia.com/',
-		fsId:'4b05869cf964a520dc6722e3'
-	}, {
-		name:'The Florida Mall', 
-		location:{
-			lat:28.44599, lng:-81.39775
-		}, 
-		address:'8001 Orange Blossom Trail, Orlando, FL 32809',
-		phone:'407-851-6255',
-		site:'http://www.simon.com/mall/the-florida-mall',
-		fsId:'4b05869bf964a520b66722e3'
-	}, {
-		name:'Artegon Marketplace', 
-		location:{
-			lat:28.46870, lng:-81.44728
-		},
-		address:'5250 International Dr, Orlando, FL 32819',
-		phone:'407-351-7718',
-		site:'http://www.artegonmarketplace.com/',
-		fsId:'5344416d498e7d8a923ab667'
-	}, {
-		name:'Pointe Orlando', 
-		location:{
-			lat:28.43253, lng:-81.47079
-		},
-		address:'9101 International Dr, Orlando, FL 32819',
-		phone:'407-248-2838',
-		site:'http://www.pointeorlando.com/',
-		fsId:'4e752a59a809582dd5d35532'
-	}, {
-		name:'Orlando International Premium Outlets', 
-		location:{
-			lat:28.47477, lng:-81.45191
-		}, 
-		address:'4951 International Dr, Orlando, FL 32819',
-		phone:'407-352-9600',
-		site:'http://www.premiumoutlets.com/outlet/orlando-international',
-		fsId:'4b05869df964a520e06722e3'
-	}];
 
 	var largeInfowindow = new google.maps.InfoWindow({ maxWidth: 220 });
 	var bounds = new google.maps.LatLngBounds();
@@ -112,6 +116,8 @@ var foursquareApi = function(marker, infowindow){
 			+ venue.name + '">' + "<p>" + venue.description +
 			"</p>";
 
+		markers.fsContent = fsContent;
+
 		//Then we populate our infowindow.
 		if (infowindow.marker != marker) {
 		infowindow.marker = marker;
@@ -123,20 +129,40 @@ var foursquareApi = function(marker, infowindow){
 	}
 	});
 }
-/*
+
+var Item = function(place){
+	this.name = ko.observable(place.name);
+}
+
+
 var ViewModel = function(){
 	var self = this;
-	self.filteredItems = ko.computed(function() {
-	         var listFilter = self.filter().toLowerCase();
-	         return ko.utils.arrayFilter(self.vineList(), function(item) {
-	             //console.log(item);
-	             if (item.name().toLowerCase().indexOf(listFilter) > -1) {
-	                 if (item.marker) item.marker.setVisible(true);
-	                 return true;
-	             } else {
-	                 item.marker.setVisible(false);
-	                 return false;
-	             }
-	         });
+
+	var mappedData = ko.utils.arrayMap(places, function(place){
+		return new Item(place);
+	});
+
+	this.itemList = ko.observableArray(mappedData);
+	this.filter = ko.observable("");
+
+	this.select = function(place){
+			
+
+	}
+
+	this.filteredItems = ko.computed(function(){
+		var filter = self.filter().toLowerCase();
+					//console.log(itemList);
+			if (!filter) {
+				return self.itemList();
+			} else {
+				return ko.utils.arrayFilter(self.itemList(), function(item) {
+					console.log("still gucci");
+           			return item.name().toLowerCase().indexOf(filter) !== -1;
+        		});
+			}
 	}, self);
-}*/
+
+}
+var viewmodel = new ViewModel();
+ko.applyBindings(viewmodel);

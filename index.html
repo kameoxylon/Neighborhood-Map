@@ -2,27 +2,28 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="css/style.css">
-		<script src="js/main.js"></script>
-		<script src="js/knockout-3.4.0.js"></script>
-		<script src="js/jquery-3.1.0.js"></script>
 	</head>
 	<body>
 		<div class="container">
 			<div class="options-box">
-				<h1>Places of Interest</h1>
-				<input id="address" type="textbox" placeholder="Enter Address">
-				<input id="submit" type="button" value="Gooo">
-				<hr>
-				<input id="places-search" type="text" placeholder="Place">
-				<input id="go-places" type="button" value="Go">
+				<h1>Orlando Shopping</h1>
+				<div>
+					<form id="search-box" name="search-box">
+						<input data-bind="textInput: userSearch, value:filter, valueUpdate: 'afterkeydown'" placeholder="Search Shopping">
+					</form>
+				</div>
+				<ul data-bind="foreach: filteredItems">
+					<li><button data-bind="text: $data.name, click: $parent.select"></button></li>
+				</ul>
 			</div>
 			<div id="map">
 			</div>
 		</div>
 		
-		<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry&key=AIzaSyCCMy9pVOKE5VRZu5bqwCNS-6s76tf9rmM&v=3&callback=initMap">
-    </script>
-
+		<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry&key=AIzaSyCCMy9pVOKE5VRZu5bqwCNS-6s76tf9rmM&v=3&callback=initMap"></script>
+		<script src="js/knockout-3.4.0.js"></script>
+		<script src="js/jquery-3.1.0.js"></script>
+		<script src="js/main.js"></script>
 
 	</body>
 </html>
