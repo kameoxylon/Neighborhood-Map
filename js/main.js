@@ -1,7 +1,3 @@
-var map;
-
-var markers = [];
-
 var userSearch = ("");
 
 var places = [{
@@ -51,89 +47,48 @@ var places = [{
 	fsId:'4b05869df964a520e06722e3'
 }];
 
-
+//Set up our map.
 var initMap = function() {
-	map = new google.maps.Map(document.getElementById('map'), {
+	viewmodel.map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 13,
 		center: {lat: 28.46870, lng: -81.44728},
 		mapTypeControl: false
 	});
 
+	//infowindow is given a 220px width.
+	viewmodel.infowindow = new google.maps.InfoWindow({ maxWidth: 220 });
+	viewmodel.bounds = new google.maps.LatLngBounds();
 
-	var largeInfowindow = new google.maps.InfoWindow({ maxWidth: 220 });
-	var bounds = new google.maps.LatLngBounds();
-
-	for (var i = 0; i < places.length; i++){
+	//Here we cycle through our places array and put them into our viewmodel object.
+	viewmodel.itemList().forEach(function(item) {
 		var marker = new google.maps.Marker({
-			map: map,
-			title: places[i].name,
-			position: places[i].location,
+			position: new google.maps.LatLng(item.lat(), item.lng()),
 			animation: google.maps.Animation.DROP,
-			fsId: places[i].fsId
+			map: viewmodel.map,
+			fsId: item.fsId()
 		});
 
+		item.marker = marker
 
-		markers.push(marker);
-		bounds.extend(marker.position);
+		//Give the map a responsive sive with the extends and fitBounds functions.
+		viewmodel.bounds.extend(marker.position);
 
-		marker.addListener('click', function() {
-			foursquareApi(this, largeInfowindow);			
-		});
+		google.maps.event.addListener(marker, 'click', function() {
+			viewmodel.select(item);
 
-		map.fitBounds(bounds);
-	}
+		});	
+		viewmodel.map.fitBounds(viewmodel.bounds);
+	}); 
+
 }
 
-/* With help from forum post 
-https://discussions.udacity.com/t/why-am-i-getting-an-array-of-30-venues-returned-from-my-foursquare-api-request/184569/3
-The foursquareApi takes the foursquare info and places it into an infowindow*/
-var foursquareApi = function(marker, infowindow){
-	var clientID = 'B1PVMK2YOJ2P0CCEHF254SNVQF451H3M1BHXOXPC4413UBUM';
-	var clientSecret = 'ENO5U0ZPXGMUVKN4ZFK4BPJQSTI1FDUZACKAHOFGOQTXFBTK';
-	var startUrl = "https://api.foursquare.com/v2/venues/";
-	var fsId = marker.fsId;
-
-	var url = startUrl + fsId + "?client_id=" + clientID + "&client_secret=" + clientSecret + "&v=20160624";
-
-	$.ajax({
-		type: "GET",
-		dataType: "json",
-		url: url
-	})
-
-	.done(function(data) {
-		//Take chunks of info that I need.
-		var venue = data.response.venue;
-
-		console.log(venue);
-		//Now parse those chunks into useable bits.
-		var venueDescription = venue.description;
-		var venueImageUrl = venue.bestPhoto.prefix + "width150" + venue.bestPhoto.suffix;
-
-		//Finally lets set it all up into html.
-		var fsContent = '<h3>' + venue.name + '</h3>' + 
-			'<img src="' + venueImageUrl + '" alt="' 
-			+ venue.name + '">' + "<p>" + venue.description +
-			"</p>";
-
-		markers.fsContent = fsContent;
-
-		//Then we populate our infowindow.
-		if (infowindow.marker != marker) {
-		infowindow.marker = marker;
-		infowindow.setContent('<div>' + fsContent + '<div>');
-		infowindow.open(map, marker);
-		infowindow.addListener('closeclick', function(){
-			infowindow.setMarker(null);
-		});
-	}
-	});
-}
 
 var Item = function(place){
 	this.name = ko.observable(place.name);
+	this.lat = ko.observable(place.location.lat);
+	this.lng = ko.observable(place.location.lng);
+	this.fsId = ko.observable(place.fsId);
 }
-
 
 var ViewModel = function(){
 	var self = this;
@@ -145,14 +100,54 @@ var ViewModel = function(){
 	this.itemList = ko.observableArray(mappedData);
 	this.filter = ko.observable("");
 
-	this.select = function(place){
-			
+	//Our foursquareApi builds up our url and uses ajax to get a response from  the server, once we get our response
+	//we take all the bits we need and make our content for the infowindow.
+	function foursquareApi(item){
+		var clientID = 'B1PVMK2YOJ2P0CCEHF254SNVQF451H3M1BHXOXPC4413UBUM';
+		var clientSecret = 'ENO5U0ZPXGMUVKN4ZFK4BPJQSTI1FDUZACKAHOFGOQTXFBTK';
+		var startUrl = "https://api.foursquare.com/v2/venues/";
+		var fsId = item.fsId;
 
+		var url = startUrl + fsId + "?client_id=" + clientID + "&client_secret=" + clientSecret + "&v=20160624";
+
+		$.ajax({
+			url: url,
+			dataType: "json",
+			//If its successful do stuff with data, otherwise give an error.
+			success: function(data){
+				var venue = data.response.venue;
+
+				//Now parse those chunks into useable bits.
+				var venueDescription = venue.description;
+				var venueImageUrl = venue.bestPhoto.prefix + "width150" + venue.bestPhoto.suffix;
+
+				//Finally lets set it all up into html.
+				fsContent = '<h3>' + venue.name + '</h3>' + 
+					'<img src="' + venueImageUrl + '" alt="' 
+					+ venue.name + '">' + "<p>" + venue.description +
+					"</p>";
+				viewmodel.infowindow.setContent(fsContent);
+			},
+			error: function(url, errorMsg) {
+				setTimeout(function(){
+					if(errorMsg) {
+						viewmodel.infowindow.setContent("There was an error loading the content.");
+						viewmode.infowindow.open(viewmodel.map, item.marker);
+					}
+				}, 2000);
+			}
+		});
 	}
 
+	//If we select something from the list or map, run the foursquareApi and put it on the infowindow.
+	this.select = function(place){
+		foursquareApi(place.marker);
+		viewmodel.infowindow.open(viewmodel.map, place.marker);
+	}
+
+	//Filter our search done on the searchbox.
 	this.filteredItems = ko.computed(function(){
 		var filter = self.filter().toLowerCase();
-					//console.log(itemList);
 			if (!filter) {
 				return self.itemList();
 			} else {
@@ -164,5 +159,12 @@ var ViewModel = function(){
 	}, self);
 
 }
+
 var viewmodel = new ViewModel();
 ko.applyBindings(viewmodel);
+
+
+//Hides our nav bar.
+$(".hamburger").on('click', function() {
+	$(".nav").toggleClass('slide-out');
+});
