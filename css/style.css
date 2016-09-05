@@ -45,7 +45,7 @@ h1 {
 	max-height: calc(100% - 50px);
 	left: 362px;
 	position: absolute;
-	right: 0px;
+	right: -362px;
 }
 
 .nav {

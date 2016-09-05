@@ -1,32 +1,33 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<title>Orlando Shopping</title>
+		<meta charset="utf-8">
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" href="css/style.css">
-		<link rel="stylesheet" href="css/hamburger.min.css">
 	</head>
 	<body>
 		<div class="container">
-			<div class="top-nav"><img src="img/hamburger.png" class="hamburger"></div>
+			<nav class="top-nav"><img src="img/hamburger.png" class="hamburger" alt="hamburger icon"></nav>
 
-			<div class="nav">
+			<aside class="nav" data-bind="">
 				<h1>Orlando Shopping</h1>
 				<div>
 					<form id="search-box" name="search-box">
-						<input data-bind="textInput: userSearch, value:filter, valueUpdate: 'afterkeydown'" placeholder="Search Shopping">
+						<input data-bind="value:filter, valueUpdate: 'afterkeydown'" placeholder="Search Shopping">
 					</form>
 				</div>
 				<ul data-bind="foreach: filteredItems">
 					<li><button data-bind="text: $data.name, click: $parent.select"></button></li>
 				</ul>
-			</div>
-			<div id="map">
-			</div>
+			</aside>
+			<main id="map"></main>
 		</div>
 		
-		<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry&key=AIzaSyCCMy9pVOKE5VRZu5bqwCNS-6s76tf9rmM&v=3&callback=initMap"></script>
 		<script src="js/knockout-3.4.0.js"></script>
 		<script src="js/jquery-3.1.0.js"></script>
 		<script src="js/main.js"></script>
+		<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry&key=AIzaSyCCMy9pVOKE5VRZu5bqwCNS-6s76tf9rmM&v=3&callback=initMap"></script>
 
 	</body>
 </html>

@@ -1,4 +1,4 @@
-var userSearch = ("");
+'use strict';
 
 var places = [{
 	name:'The Mall At Millenia', 
@@ -68,18 +68,28 @@ var initMap = function() {
 			fsId: item.fsId()
 		});
 
-		item.marker = marker
+		item.marker = marker;
 
 		//Give the map a responsive sive with the extends and fitBounds functions.
 		viewmodel.bounds.extend(marker.position);
 
 		google.maps.event.addListener(marker, 'click', function() {
 			viewmodel.select(item);
-
 		});	
 		viewmodel.map.fitBounds(viewmodel.bounds);
 	}); 
 
+};
+
+function toggleBounce(viewmodel) {
+	if (viewmodel.marker.getAnimation() !== null) {
+		viewmodel.marker.setAnimation(null);
+	} else {
+		viewmodel.marker.setAnimation(google.maps.Animation.BOUNCE);
+		setTimeout(function() {
+			viewmodel.marker.setAnimation(null);
+		}, 730);
+	}
 }
 
 
@@ -88,7 +98,7 @@ var Item = function(place){
 	this.lat = ko.observable(place.location.lat);
 	this.lng = ko.observable(place.location.lng);
 	this.fsId = ko.observable(place.fsId);
-}
+};
 
 var ViewModel = function(){
 	var self = this;
@@ -98,7 +108,7 @@ var ViewModel = function(){
 	});
 
 	this.itemList = ko.observableArray(mappedData);
-	this.filter = ko.observable("");
+	this.filter = ko.observable('');
 
 	//Our foursquareApi builds up our url and uses ajax to get a response from  the server, once we get our response
 	//we take all the bits we need and make our content for the infowindow.
@@ -121,20 +131,26 @@ var ViewModel = function(){
 				var venueDescription = venue.description;
 				var venueImageUrl = venue.bestPhoto.prefix + "width150" + venue.bestPhoto.suffix;
 
+				if (venue == "undefined" || venueDescription == "undefined" || venueImageUrl == "undefined"){
+					viewmodel.infowindow.setContent("There was an error finding correct content information.");
+					viewmode.infowindow.open(viewmodel.map, item.marker);
+					console.log("venue: " + venue + ", " + "venueDescription: " + venueDescription + "," 
+						+ "venueImageUrl: " + venueImageUrl);
+				}
+
 				//Finally lets set it all up into html.
-				fsContent = '<h3>' + venue.name + '</h3>' + 
-					'<img src="' + venueImageUrl + '" alt="' 
-					+ venue.name + '">' + "<p>" + venue.description +
-					"</p>";
+				var fsContent = '<h3>' + venue.name + '</h3>' + 
+					'<img src="' + venueImageUrl + '" alt="' +
+					venue.name + '">' + '<p>' + venue.description +
+					'"</p>"';
 				viewmodel.infowindow.setContent(fsContent);
 			},
+			//Error function in case nothing loads.
 			error: function(url, errorMsg) {
-				setTimeout(function(){
-					if(errorMsg) {
-						viewmodel.infowindow.setContent("There was an error loading the content.");
-						viewmode.infowindow.open(viewmodel.map, item.marker);
-					}
-				}, 2000);
+				if(errorMsg) {
+					viewmodel.infowindow.setContent("There was an error loading the content.");
+					viewmodel.infowindow.open(viewmodel.map, item.marker);
+				}
 			}
 		});
 	}
@@ -143,28 +159,66 @@ var ViewModel = function(){
 	this.select = function(place){
 		foursquareApi(place.marker);
 		viewmodel.infowindow.open(viewmodel.map, place.marker);
-	}
+		toggleBounce(place);
+	};
 
-	//Filter our search done on the searchbox.
-	this.filteredItems = ko.computed(function(){
-		var filter = self.filter().toLowerCase();
-			if (!filter) {
-				return self.itemList();
-			} else {
-				return ko.utils.arrayFilter(self.itemList(), function(item) {
-					console.log("still gucci");
-           			return item.name().toLowerCase().indexOf(filter) !== -1;
-        		});
-			}
-	}, self);
+	//Filter our search done on the searchbox and filter our map.
+     self.filteredItems = ko.computed(function() {
+         var filter = self.filter().toLowerCase();
+         return ko.utils.arrayFilter(self.itemList(), function(item) {
+             //console.log(item);
+             if (item.name().toLowerCase().indexOf(filter) > -1) {
+                 if (item.marker) item.marker.setVisible(true);
+                 return true;
+             } else {
+                 item.marker.setVisible(false);
+                 return false;
+             }
+         });
+     }, self);
 
-}
+
+};
 
 var viewmodel = new ViewModel();
 ko.applyBindings(viewmodel);
 
 
+//This handles our google maps api error and puts a window on the user's browser displaying so and more info
+//in the console window.
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    var string = msg.toLowerCase();
+    var substring = "script error";
+    if (string.indexOf(substring) > -1){
+        alert('Script Error: See Browser Console for Detail');
+    } else {
+        var message = [
+            'Message: ' + msg,
+            'URL: ' + url,
+            'Line: ' + lineNo,
+            'Column: ' + columnNo,
+            'Error object: ' + JSON.stringify(error)
+        ].join(' - ');
+
+        alert(message);
+    }
+
+    return false;
+};
+
+var count = 0;
 //Hides our nav bar.
 $(".hamburger").on('click', function() {
 	$(".nav").toggleClass('slide-out');
+	if ((count % 2) == 0){
+		//close
+		$("#map").css("left", "0px");
+		$("#map").css("right", "-362px");
+	} else {
+		//open
+		$("#map").css("left", "362px");
+		$("#map").css("right", "0px");
+
+	}
+	count++;
 });
